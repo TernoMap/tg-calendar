@@ -1,17 +1,13 @@
-# Секретные ключи и настройки
 .env
 
-# Кэш Python компилятора
 **/__pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Виртуальное окружение
 .venv/
 venv/
 ENV/
 
-# Настройки VS Code
 .vscode/
 
