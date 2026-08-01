@@ -20,10 +20,10 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "localhost"),
-    "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", ""),
-    "db": os.getenv("DB_NAME", "tg_calendar_db"),
+    "host": os.getenv("DB_HOST"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "db": os.getenv("DB_NAME"),
     "autocommit": True
 }
 
@@ -47,7 +47,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://ternomap.github.io"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,9 +71,7 @@ def verify_tg_user(init_data_str: str) -> int:
 # Эндпоинт для раздачи фронтенда index.html
 @app.get("/")
 async def serve_index():
-    # Добавляем заголовок, который отключает предупреждение ngrok
-    headers = {"ngrok-skip-browser-warning": "true"}
-    return FileResponse("index.html", headers=headers)
+    return FileResponse("index.html")
 
 @app.post("/api/events/save")
 async def save_event(payload: SaveEventRequest):
@@ -114,9 +112,7 @@ router = Router()
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    # Укажите здесь URL, на котором будет запущен ваш FastAPI бэкенд
-    # Для тестов локально (через Ngrok / LocalTunnel) это будет ваш временный https адрес
-    mini_app_url = "https://happy-stars-press.loca.lt" 
+    mini_app_url = os.getenv("MINI_APP_URL", "https://ternomap.github.io/tg-calendar/")
     
     markup = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="📅 Открыть Календарь", web_app=WebAppInfo(url=mini_app_url))]

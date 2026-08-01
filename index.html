@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TG Calendar</title>
-    <!-- Подключаем скрипт Telegram -->
     <script src="https://telegram.org"></script>
     <style>
         body {
@@ -45,7 +44,6 @@
             <h3 id="modal-date-title"></h3>
             <div id="events-list"></div>
             
-            <!-- Форма создания (будет скрываться для прошлых дат) -->
             <div id="create-form">
                 <input type="text" id="event-text" placeholder="Описание события...">
                 <button onclick="saveEvent()">Сохранить событие</button>
@@ -55,10 +53,9 @@
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
+        const tg = window.Д.WebApp;
         tg.ready();
         tg.expand();
-
 
         const API_BASE_URL = ""; 
         let savedEvents = {};
@@ -71,10 +68,18 @@
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true' // Добавьте эту строку
+                        'ngrok-skip-browser-warning': 'true' 
                     },
                     body: JSON.stringify({ initData: tg.initData })
                 });
+                if (response.ok) {
+                    savedEvents = await response.json();
+                    renderCalendar();
+                }
+            } catch (err) {
+                console.error("Ошибка загрузки данных из БД:", err);
+            }
+        }
 
         function renderCalendar() {
             const year = currentDate.getFullYear();
@@ -94,7 +99,7 @@
                 grid.innerHTML += `<div class="weekday">${d}</div>`;
             });
             
-            // Смещение для первого дня месяца (перевод на ISO неделю, где Пн = 0)
+            // Смещение для первого дня месяца (Пн = 0)
             let shift = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
             for(let i=0; i<shift; i++) grid.innerHTML += '<div></div>';
             
@@ -128,7 +133,6 @@
                 list.innerHTML = '<p>Нет событий на этот день</p>';
             }
 
-            // Если дата в прошлом — полностью убираем форму добавления
             if (isPast) {
                 document.getElementById('create-form').style.display = 'none';
             } else {
@@ -142,7 +146,6 @@
             const text = document.getElementById('event-text').value.trim();
             if (!text) return;
 
-            // Первичная проверка на фронте
             const checkDate = new Date(selectedDateStr);
             const today = new Date();
             today.setHours(0,0,0,0);
@@ -155,9 +158,9 @@
                 const response = await fetch(`${API_BASE_URL}/api/events/save`, {
                     method: 'POST',
                     headers: {
-                         'Content-Type': 'application/json',
-                         'ngrok-skip-browser-warning': 'true'
-                         },
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
                     body: JSON.stringify({
                         initData: tg.initData,
                         event_date: selectedDateStr,
@@ -166,14 +169,13 @@
                 });
 
                 if (response.ok) {
-                    // Локально обновляем UI, чтобы не делать лишний запрос к БД
                     if (!savedEvents[selectedDateStr]) savedEvents[selectedDateStr] = [];
                     savedEvents[selectedDateStr].push(text);
                     
                     document.getElementById('event-text').value = '';
                     closeModal();
                     renderCalendar();
-                    tg.HapticFeedback.notificationOccurred("success");
+                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
                 } else {
                     const errData = await response.json();
                     alert(errData.detail || "Ошибка при сохранении");
@@ -186,10 +188,9 @@
         function closeModal() { document.getElementById('event-modal').style.display = 'none'; }
         function changeMonth(dir) { currentDate.setMonth(currentDate.getMonth() + dir); renderCalendar(); }
 
-        // Инициализация при запуске
+        // Стартовая инициализация
         loadEventsFromDB();
-
-         
     </script>
+
 </body>
 </html>
